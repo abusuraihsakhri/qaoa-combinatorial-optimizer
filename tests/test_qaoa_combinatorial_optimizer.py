@@ -3,9 +3,13 @@ Automated Pytest Test Suite for Qaoa Combinatorial Optimizer.
 Domain: Clinical & Biomedical AI
 Standard: CAP / CLSI / ISO Standards
 """
+import os
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Set a secure test key before importing modules that initialize audit trails
+os.environ.setdefault("AUDIT_SECRET_KEY", "test-secret-key-for-pytest-suite-32chars!")
 
 import pytest
 from agents.base import PHIGuard, AuditLogger, SecurityException
@@ -63,3 +67,38 @@ def test_supervisor_consensus_and_audit():
     assert main(["audit", "--task-id", "CLI-TEST-01"]) == 0
     assert main(["chat", "Explain", "specifications"]) == 0
     assert main(["verify-audit"]) == 0
+
+
+def test_audit_trail_requires_secret_key():
+    """AuditTrail must reject missing or short secret keys."""
+    from agents.base import AuditTrail
+
+    # Missing key raises SecurityException
+    original = os.environ.pop("AUDIT_SECRET_KEY", None)
+    try:
+        with pytest.raises(SecurityException):
+            AuditTrail()
+    finally:
+        if original:
+            os.environ["AUDIT_SECRET_KEY"] = original
+
+    # Short key raises SecurityException
+    with pytest.raises(SecurityException):
+        AuditTrail(secret_key="short")
+
+    # Valid key works
+    trail = AuditTrail(secret_key="a" * 32)
+    assert len(trail.logs) == 0
+
+
+def test_batch_missing_file_returns_error():
+    """Batch command returns non-zero exit code for missing input file."""
+    assert main(["batch", "-i", "nonexistent_file_xyz.csv"]) == 1
+
+
+def test_phi_redaction():
+    """PHIGuard.redact_phi masks sensitive identifiers."""
+    redacted = PHIGuard.redact_phi("Contact patient at 555-123-4567 or MRN-12345")
+    assert "555-123-4567" not in redacted
+    assert "MRN-12345" not in redacted
+    assert "[REDACTED_IDENTIFIER]" in redacted
