@@ -1,166 +1,76 @@
 # QAOA Combinatorial Optimizer
 
-> **Domain:** Quantum Computing & Combinatorial Optimization
-> **Standard:** QAOA Quantum Optimization Protocol
+Small-graph **weighted Max-Cut** with a classical state-vector simulation of the Quantum Approximate Optimization Algorithm (QAOA). The repository also retains an earlier parameter-auditing CLI and FastAPI service for backwards compatibility.
 
-<div align="center">
+## What works
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB.svg?logo=python&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688.svg?logo=fastapi&logoColor=white)
-![Audit Trail](https://img.shields.io/badge/Audit-HMAC--SHA256_Tamper--Evident-brightgreen.svg)
-![Zero-PHI Guard](https://img.shields.io/badge/Guard-Zero--PHI_Outbound-blue.svg)
-![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg?logo=docker&logoColor=white)
+- **Browser application (`web/`)**: enter undirected edges and positive weights, choose 1–3 QAOA layers, run parameter search, inspect the most probable partition and state probabilities, and export results to JSON. Computation stays in the browser without a backend, quantum hardware, or remote data transfer.
+- **Python QAOA simulator**: exact state-vector evolution with cost and transverse-X mixer unitaries; deterministic grid initialization followed by coordinate refinement.
+- **Comparison against exact Max-Cut**: exhaustive enumeration gives the exact optimum and an expected-value approximation ratio for reference. The most likely bitstring is not necessarily the optimal partition.
+- **CLI and API**: optimize graph JSON from the command line or send it to `POST /api/maxcut`.
+- **Legacy audit interface**: `audit`, `batch`, `chat`, `verify-audit`, and `serve` commands remain available. These perform rule-based parameter checks; they are **not** QAOA solvers.
 
-</div>
+The simulator accepts **2–9 vertices**, **positive finite edge weights**, and **1–3 layers**. It uses a classical state vector and exponential memory/time in vertex count. There is no quantum-hardware execution, convergence guarantee, or general-purpose combinatorial optimizer.
 
----
+## Browser usage
 
-## 📖 What It Does
-
-QAOA Combinatorial Optimizer is a Python-based framework implementing the Quantum Approximate Optimization Algorithm (QAOA) for solving combinatorial optimization problems, particularly Max-Cut on Ising Hamiltonians. It provides a multi-agent evaluation system with configurable worker agents that audit parameters against domain-specific thresholds and protocols.
-
----
-
-## ⚙️ Key Capabilities & Algorithmic Modules
-
-- **Core QAOA Engine**: Parameter evaluation against operational thresholds for Ising cost Hamiltonians.
-- **Multi-Agent Worker System**: Specialized sub-auditors (IsingHamiltonianAgent, MixerHamiltonianAgent, ApproximationRatioAgent) for boundary checking and anomaly detection.
-- **Enrichment Suite**: Extensible feature engines for Multi-QAOA with alternating mixer Hamiltonians, parameter-free QAOA via Nelder-Mead warm start, and more.
-- **Zero-PHI Outbound Guard**: Active regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers from outbound data.
-- **Tamper-Evident HMAC-SHA256 Audit Trail**: Chained, cryptographically signed logs for every evaluation and state transition.
-- **FastAPI REST Server**: Exposes OpenAPI-compatible REST endpoints for programmatic access.
-- **Prometheus Telemetry**: Operational metrics export for monitoring.
-
----
-
-## 💻 Installation
+Serve the static files with Python (required for ES modules):
 
 ```bash
-# Clone the repository
-git clone https://github.com/abusuraihsakhri/qaoa-combinatorial-optimizer.git
-cd qaoa-combinatorial-optimizer
-
-# Install dependencies
-pip install fastapi uvicorn pydantic pytest
-
-# Set the required audit secret key (minimum 32 characters)
-export AUDIT_SECRET_KEY="your-secure-audit-key-here-min-32-chars"
+python -m http.server 8001 --directory web
 ```
 
----
+Visit http://localhost:8001/. Enter one `u,v,weight` edge per line with zero-based vertex indices. Run QAOA to view the expected cut weight, exact optimum, approximation ratio, angles, and bitstring probabilities. **Export results JSON** downloads the computed result.
 
-## ⚙️ CLI Quickstart & Usage
+GitHub Pages deployment is defined in `.github/workflows/pages.yml`. Availability depends on GitHub Pages being enabled and configured to use GitHub Actions; consult the repository's Actions/Pages status for confirmation.
 
-### 1. Single Task Evaluation
+## Python CLI
+
+Python 3.10+ is covered by CI. Install and run:
+
 ```bash
-python cli.py audit --task-id TASK-001 --target KEY-01 --primary 28.5 --secondary 14.2 --critical --status DISCORDANT
+python -m pip install -e ".[server,test]"
+python cli.py maxcut --graph examples/square.json --layers 2 --grid 10
 ```
 
-### 2. System Configuration Query
-```bash
-python cli.py chat "What is the system status?"
+Graph file schema:
+
+```json
+{
+  "vertices": 4,
+  "edges": [[0, 1, 1], [1, 2, 1], [2, 3, 1], [3, 0, 1]]
+}
 ```
 
-### 3. Batch CSV Processing
-```bash
-python cli.py batch -i sample.csv -o results.csv
-```
+The installed `qaoa-combinatorial-optimizer` entry point also supports `maxcut`. Weighted undirected edges must be unique; no self-loops or negative weights.
 
-### 4. Verify Audit Trail Integrity
-```bash
-python cli.py verify-audit
-```
+## FastAPI
 
-### 5. Launch REST API Server
 ```bash
+export AUDIT_SECRET_KEY="replace-with-a-unique-32-character-or-longer-random-secret"
 python cli.py serve --host 127.0.0.1 --port 8000
 ```
 
-### Parameter Reference
-- `--task-id`: Unique task / case identifier
-- `--target`: Entity or target key
-- `--primary`: Primary domain measurement (float)
-- `--secondary`: Secondary kinetic or confidence score (float)
-- `--critical`: Emergency escalation flag
-- `--status`: Status code or phenotype descriptor
+`POST http://127.0.0.1:8000/api/maxcut` accepts the graph schema above with optional `layers` (1–3) and `grid` (4–24). `GET /health` exposes service health. Existing `/api/audit`, `/api/chat`, and `/api/audit/logs` endpoints serve the legacy audit workflow.
 
-### Input Data Schema (CSV)
+The legacy audit workflow requires `AUDIT_SECRET_KEY` (at least 32 characters). The audit chain is signed with HMAC-SHA256 and validated against the configured key, but **its records are process-local and not durable**. The PHI filter is regex-based and must not be relied upon as comprehensive de-identification or regulatory compliance. Avoid submitting real patient identifiers.
 
-| Field | Description | Requirement |
-|:------|:------------|:------------|
-| `task_id` | Task identifier | Required |
-| `target_identifier` | Target entity key | Required |
-| `primary_metric` | Primary measurement (float) | Required |
-| `secondary_metric` | Secondary score (float) | Required |
-| `is_critical_flag` | Critical escalation flag | Optional |
-| `status_descriptor` | Status code descriptor | Required |
+To run the backend with Docker Compose, supply the audit secret in the host environment. No production key is included in the current configuration.
 
----
-
-## 🛡️ Security & Enterprise Architecture
-
-* **Zero-PHI Outbound Interceptor:** Active regex inspection blocking SSNs, MRNs, phone numbers, and patient identifiers.
-* **Tamper-Evident HMAC-SHA256 Audit Trail:** Chained, cryptographically signed logs. Requires `AUDIT_SECRET_KEY` environment variable (minimum 32 characters).
-* **Air-Gapped LLM Reasoning Adapter:** Agnostic integration for local Ollama instances, Claude, GPT-4o, and deterministic test mocks.
-* **Active Learning Bayesian Calibration:** Dynamic tracker updating worker reliability weights and monitoring Brier calibration drift.
-* **FastAPI & Prometheus Telemetry:** Exposes OpenAPI 3.1 REST endpoints and operational Prometheus metrics (`/metrics`).
-
----
-
-## 🧪 Testing & Verification
-
-Run the automated test suite:
+## Testing
 
 ```bash
-# Set test key and run tests
-export AUDIT_SECRET_KEY="test-secret-key-for-pytest-suite-32chars!"
-pytest -v
+python -m pytest -q
+node --test tests/test_web_qaoa.mjs
+python -m compileall -q agents qaoa_optimizer cli.py
 ```
 
-Execute high-throughput batch simulation benchmarks:
+GitHub Actions runs the Python tests across 3.10–3.13 and the JavaScript simulator tests. The frontend requires no npm installation or external JavaScript dependencies.
 
-```bash
-python simulator.py 1000
-```
+## Privacy and compatibility
 
----
+The standalone browser simulation does not send graph inputs to a server and does not persist results automatically. JSON export occurs locally. It uses standard ES modules and typed arrays in current Chrome, Firefox, Safari, and Edge browsers. Python API access, if used, sends input to the configured server.
 
-## 🐳 Container Deployment
+## License
 
-```bash
-docker build -t qaoa-combinatorial-optimizer .
-docker run -e AUDIT_SECRET_KEY="your-secure-key-here-min-32-chars" -p 8000:8000 qaoa-combinatorial-optimizer
-```
-
----
-
-## 📁 Project Structure
-
-```
-qaoa-combinatorial-optimizer/
-├── agents/                  # Enterprise agent system (supervisor, workers, audit)
-│   ├── api.py              # FastAPI REST endpoints
-│   ├── base.py             # Security guards, HMAC audit trail
-│   ├── models.py           # Pydantic data models
-│   ├── supervisor.py       # Master orchestrator
-│   ├── workers.py          # Specialized evaluation workers
-│   └── ...
-├── qaoa_optimizer/         # Core QAOA engine and agents
-│   ├── engine.py           # Algorithmic evaluation engine
-│   ├── agents.py           # Sub-agent implementations
-│   ├── models.py           # Data models
-│   └── ...
-├── tests/                  # Pytest test suite
-├── cli.py                  # Main CLI entry point
-├── simulator.py            # High-throughput simulation
-├── enrichment.py           # Feature enrichment engines
-├── Dockerfile              # Container build config
-└── pyproject.toml          # Project metadata and dependencies
-```
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+MIT — see [LICENSE](LICENSE).
