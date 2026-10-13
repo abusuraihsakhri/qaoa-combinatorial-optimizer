@@ -1,236 +1,119 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Qaoa Combinatorial Optimizer — Operations Console</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg: #090d16;
-            --card: #111827;
-            --border: #1f293d;
-            --accent: #3b82f6;
-            --accent-glow: rgba(59, 130, 246, 0.25);
-            --text: #f3f4f6;
-            --text-muted: #9ca3af;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --success: #10b981;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            padding: 2rem;
-            min-height: 100vh;
-        }
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1.5rem;
-            margin-bottom: 2rem;
-        }
-        .header-title h1 { font-size: 1.6rem; font-weight: 700; color: #fff; }
-        .header-title p { color: var(--text-muted); font-size: 0.9rem; margin-top: 0.25rem; }
-        .badge {
-            display: inline-block;
-            padding: 0.3rem 0.8rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            background: var(--accent-glow);
-            color: var(--accent);
-            border: 1px solid var(--accent);
-        }
-        .grid {
-            display: grid;
-            grid-template-columns: 1fr 1.2fr;
-            gap: 1.5rem;
-        }
-        .card {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-        }
-        .card h2 {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.4rem; }
-        input, select, textarea {
-            width: 100%;
-            padding: 0.65rem 0.9rem;
-            background: #0d1322;
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.9rem;
-        }
-        input:focus, textarea:focus { outline: none; border-color: var(--accent); }
-        .btn {
-            background: var(--accent);
-            color: #fff;
-            border: none;
-            padding: 0.7rem 1.4rem;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background: #2563eb; }
-        .terminal {
-            background: #060911;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            color: #10b981;
-            height: 380px;
-            overflow-y: auto;
-            white-space: pre-wrap;
-        }
-        .metrics-bar {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.5rem;
-        }
-        .metric-box {
-            background: var(--card);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 1rem;
-            text-align: center;
-        }
-        .metric-val { font-size: 1.4rem; font-weight: 700; color: #fff; margin-top: 0.25rem; }
-        .metric-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; }
-    </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Explore weighted Max-Cut using classical state-vector simulation of QAOA.">
+<title>QAOA Max-Cut Explorer</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1221;--panel:#152238;--border:#344661;--text:#eef3fa;--muted:#aebed4;--accent:#80baff;--good:#8be0b7;--bad:#ffb2b2}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,sans-serif}
+main{max-width:1100px;margin:auto;padding:24px clamp(15px,3vw,32px)}h1{font-size:clamp(1.6rem,4vw,2.2rem);margin:0}h2{font-size:1.15rem;margin:0 0 15px}
+p{margin:5px 0 18px;color:var(--muted)}a{color:var(--accent)}.header{margin-bottom:24px}.layout{display:grid;grid-template-columns:minmax(280px,380px) 1fr;gap:18px;align-items:start}
+.panel{border:1px solid var(--border);border-radius:14px;background:var(--panel);padding:22px;min-width:0}
+label{display:block;margin:15px 0 5px;font-weight:650}input,textarea,select{width:100%;color:var(--text);background:var(--bg);border:1px solid #72839d;border-radius:7px;padding:9px 12px;font:inherit}
+textarea{min-height:140px;resize:vertical;font-family:ui-monospace,SFMono-Regular,Consolas,monospace}input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}.hint{font-size:0.85rem;color:var(--muted);margin-top:6px}.actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+button{cursor:pointer;border:1px solid var(--accent);border-radius:8px;background:#2864ac;color:#fff;padding:10px 16px;font:inherit;font-weight:700}button.secondary{background:transparent;color:var(--accent)}button:disabled{opacity:.5;cursor:wait}
+.error{color:var(--bad);margin:12px 0 0;min-height:20px}.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:10px 0 20px}
+.stat{border:1px solid var(--border);border-radius:10px;padding:14px;background:#0c1a2e}.stat strong{display:block;font-size:clamp(1.1rem,3vw,1.6rem);font-variant-numeric:tabular-nums;color:var(--good)}.stat span{font-size:.82rem;color:var(--muted)}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;color:#d4e7ff}.bars{display:grid;gap:8px;margin-top:12px}
+.bar-row{display:grid;grid-template-columns:65px 1fr 58px;gap:10px;align-items:center;font:12px ui-monospace,monospace}.track{height:13px;background:#2d4260;border-radius:99px;overflow:hidden}.fill{height:100%;background:var(--accent);border-radius:99px}
+.foot{font-size:.85rem;margin-top:18px;color:var(--muted)}.details{margin:15px 0;line-height:1.8}.placeholder{padding:30px 4px;color:var(--muted)}
+[hidden]{display:none!important}
+@media(max-width:760px){.layout{grid-template-columns:1fr}.panel{padding:17px}.stats{gap:7px}.stat{padding:9px}.bar-row{grid-template-columns:60px 1fr 48px}}
+</style>
 </head>
 <body>
-
-    <div class="header">
-        <div class="header-title">
-            <h1>Qaoa Combinatorial Optimizer</h1>
-            <p>Domain: Clinical & Cryptographic AI | Standard: CAP / CLSI / NIST Standards | LabMind-Atlas Architecture</p>
-        </div>
-        <div>
-            <span class="badge">Air-Gapped Active</span>
-            <span class="badge" style="background: rgba(16,185,129,0.2); color: #10b981; border-color: #10b981;">Zero-PHI Guard Active</span>
-        </div>
-    </div>
-
-    <div class="metrics-bar">
-        <div class="metric-box">
-            <div class="metric-label">System Status</div>
-            <div class="metric-val" style="color: var(--success);" id="m-status">OPTIMAL</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Tasks Processed</div>
-            <div class="metric-val" id="m-tasks">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">Audit Blocks Signed</div>
-            <div class="metric-val" id="m-audit">142</div>
-        </div>
-        <div class="metric-box">
-            <div class="metric-label">PHI Interceptions</div>
-            <div class="metric-val" style="color: var(--accent);" id="m-phi">0</div>
-        </div>
-    </div>
-
-    <div class="grid">
-        <div class="card">
-            <h2>⚙️ Dispatch Distributed Component Audit</h2>
-            <div class="form-group">
-                <label>Task / Sample ID</label>
-                <input type="text" id="task_id" value="TASK-2026-LIVE-01">
-            </div>
-            <div class="form-group">
-                <label>Target Identifier</label>
-                <input type="text" id="target_id" value="SPECIMEN-ALPHA-77">
-            </div>
-            <div class="form-group">
-                <label>Primary Measurement / Value</label>
-                <input type="number" id="primary_metric" value="29.4" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Secondary Metric / Kinetic Index</label>
-                <input type="number" id="secondary_metric" value="14.8" step="0.1">
-            </div>
-            <div class="form-group">
-                <label>Status / Phenotype Descriptor</label>
-                <input type="text" id="status_descriptor" value="DISCORDANT_ANOMALY">
-            </div>
-            <div class="form-group">
-                <label><input type="checkbox" id="is_critical" checked> Trigger Emergency / Critical Flag</label>
-            </div>
-            <button class="btn" onclick="runAudit()">Execute Distributed Component Audit</button>
-        </div>
-
-        <div class="card">
-            <h2>📊 Real-Time Consensus Dossier & Audit Log</h2>
-            <div class="terminal" id="outputConsole">// Qaoa Combinatorial Optimizer Operations Console Ready
-// Connection established with Air-Gapped Supervisor
-// Cryptographic HMAC-SHA256 audit ledger loaded.
-// Ready for live task payload dispatch...</div>
-        </div>
-    </div>
-
-    <script>
-        async function runAudit() {
-            const consoleEl = document.getElementById('outputConsole');
-            consoleEl.innerText = "// Dispatching task across specialized workers...
-// Invoking InvariantQCWorker, SafetyEscalationWorker, ProtocolWorker...";
-
-            const payload = {
-                task_id: document.getElementById('task_id').value,
-                target_identifier: document.getElementById('target_id').value,
-                primary_metric: parseFloat(document.getElementById('primary_metric').value),
-                secondary_metric: parseFloat(document.getElementById('secondary_metric').value),
-                status_descriptor: document.getElementById('status_descriptor').value,
-                is_critical_flag: document.getElementById('is_critical').checked
-            };
-
-            try {
-                const res = await fetch('/api/audit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                consoleEl.innerText = JSON.stringify(data, null, 2);
-                document.getElementById('m-tasks').innerText = parseInt(document.getElementById('m-tasks').innerText) + 1;
-                document.getElementById('m-audit').innerText = parseInt(document.getElementById('m-audit').innerText) + 1;
-            } catch (err) {
-                consoleEl.innerText = "// Offline / Simulation Output:\n" + JSON.stringify({
-                    dossier_id: "DOSSIER-SIM-" + Math.floor(Math.random()*10000),
-                    system: "qaoa-combinatorial-optimizer",
-                    domain: "Clinical & Cryptographic AI",
-                    task_id: payload.task_id,
-                    overall_urgency: payload.is_critical_flag ? "CRITICAL_STAT_PANIC" : "ELEVATED_RISK",
-                    integrity_status: "DISCORDANT_ANOMALY",
-                    alerts: [
-                        { worker: "InvariantQCWorker", alert: "Primary metric exceeds upper reference bound" },
-                        { worker: "SafetyEscalationWorker", alert: "Critical emergency interlock flag active" }
-                    ],
-                    audit_hash: "HMAC_SHA256_e83f9a72b941d6c381f9"
-                }, null, 2);
-            }
-        }
-    </script>
+<main>
+<header class="header">
+<h1>QAOA Max-Cut Explorer</h1>
+<p>Optimize a weighted graph using a local classical state-vector simulation of the Quantum Approximate Optimization Algorithm. No backend, account, or quantum device required.</p>
+</header>
+<div class="layout">
+<section class="panel" aria-labelledby="input-title">
+<h2 id="input-title">Graph and optimizer</h2>
+<form id="opt-form">
+<div class="fields">
+<div><label for="vertices">Vertices</label><input id="vertices" type="number" min="2" max="9" step="1" value="4" required></div>
+<div><label for="layers">QAOA layers (p)</label><select id="layers"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+</div>
+<label for="edges">Undirected weighted edges</label>
+<textarea id="edges" spellcheck="false" required>0,1,1
+1,2,1
+2,3,1
+3,0,1</textarea>
+<div class="hint">One edge per line: source, target, positive weight. Vertices are numbered 0 to n−1. Duplicate edges and self-loops are not allowed.</div>
+<label for="grid">Initial grid resolution</label><select id="grid"><option value="8">8 × 8 (fast)</option><option value="10" selected>10 × 10 (balanced)</option><option value="16">16 × 16 (thorough)</option></select>
+<div class="actions"><button id="run" type="submit">Run QAOA</button><button id="example" class="secondary" type="button">Load triangle</button></div>
+<div class="error" id="error" role="alert" aria-live="polite"></div>
+</form>
+</section>
+<section class="panel" aria-labelledby="results-title">
+<h2 id="results-title">Optimization results</h2>
+<div id="placeholder" class="placeholder">Run the optimizer to see the expected objective, most probable partition, and probability distribution.</div>
+<div id="results" hidden>
+<div class="stats">
+<div class="stat"><strong id="expected"></strong><span>Expected cut value</span></div>
+<div class="stat"><strong id="optimum"></strong><span>Exact Max-Cut</span></div>
+<div class="stat"><strong id="ratio"></strong><span>Expected / optimum</span></div>
+</div>
+<div class="details"><div>Most probable partition: <code id="bitstring"></code></div><div>Cut value: <strong id="cut"></strong> · Probability: <strong id="prob"></strong></div><div>Optimized γ: <code id="gammas"></code></div><div>Optimized β: <code id="betas"></code></div></div>
+<h2>Most probable bitstrings</h2><div id="distribution" class="bars" aria-label="Eight highest probability partitions"></div>
+<div class="actions"><button class="secondary" id="export" type="button">Export results JSON</button></div>
+</div>
+<p class="foot">Method: |+⟩ initialization, e<sup>−iγC</sup> cost phases, e<sup>−iβΣX</sup> mixer, grid initialization and local coordinate refinement. Exact optimum is found by brute force for comparison. Results are simulated estimates, not quantum hardware measurements or guarantees of optimality.</p>
+</section>
+</div>
+<p class="foot">Graph data and results stay in this browser tab. <a href="https://github.com/abusuraihsakhri/qaoa-combinatorial-optimizer">Source code</a> · MIT license</p>
+</main>
+<script type="module">
+import {parseEdges, optimize} from './qaoa.mjs';
+const $ = id => document.getElementById(id);
+let current = null;
+$('example').addEventListener('click', () => {
+ $('vertices').value = '3'; $('edges').value = '0,1,1\n1,2,1\n0,2,1'; $('error').textContent = '';
+});
+$('opt-form').addEventListener('submit', event => {
+ event.preventDefault(); $('error').textContent = ''; $('run').disabled = true;
+ try {
+   const n = Number($('vertices').value);
+   const edges = parseEdges($('edges').value, n);
+   current = optimize(n, edges, Number($('layers').value), Number($('grid').value));
+   const fixed = n => n.toFixed(4);
+   $('expected').textContent = fixed(current.expected_cut);
+   $('optimum').textContent = fixed(current.exact_optimum);
+   $('ratio').textContent = (100 * current.approximation_ratio).toFixed(2) + '%';
+   $('bitstring').textContent = current.most_likely_bitstring;
+   $('cut').textContent = fixed(current.most_likely_cut);
+   $('prob').textContent = (100 * current.most_likely_probability).toFixed(2) + '%';
+   $('gammas').textContent = current.gammas.map(fixed).join(', ');
+   $('betas').textContent = current.betas.map(fixed).join(', ');
+   const top = [...current.distribution].sort((a,b) => b.probability-a.probability).slice(0,8);
+   const target = $('distribution'); target.replaceChildren();
+   for (const sample of top) {
+     const row = document.createElement('div'); row.className = 'bar-row';
+     const label = document.createElement('code'); label.textContent = sample.bitstring;
+     const track = document.createElement('div'); track.className = 'track';
+     const bar = document.createElement('div'); bar.className = 'fill';
+     bar.style.width = (100 * sample.probability) + '%'; track.append(bar);
+     const percentage = document.createElement('span'); percentage.textContent = (100*sample.probability).toFixed(1) + '%';
+     row.append(label,track,percentage); target.append(row);
+   }
+   $('placeholder').hidden = true; $('results').hidden = false;
+ } catch (error) {
+   current = null; $('results').hidden = true; $('placeholder').hidden = false;
+   $('error').textContent = error.message || 'Optimization could not be completed.';
+ } finally { $('run').disabled = false; }
+});
+$('export').addEventListener('click', () => {
+ if (!current) return;
+ const blob = new Blob([JSON.stringify(current,null,2)], {type:'application/json'});
+ const url = URL.createObjectURL(blob);
+ const a = document.createElement('a'); a.href = url; a.download = 'qaoa-maxcut-result.json'; a.click();
+ setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+</script>
 </body>
 </html>

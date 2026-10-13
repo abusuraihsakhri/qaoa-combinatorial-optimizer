@@ -35,6 +35,16 @@ def metrics():
     }
 
 
+@app.post("/api/maxcut")
+def api_maxcut(graph: Dict[str, Any]):
+    """Classically simulate weighted Max-Cut QAOA. Request: vertices, edges, layers, grid."""
+    from qaoa_optimizer.maxcut import optimize_maxcut
+    try:
+        return optimize_maxcut(graph["vertices"], graph["edges"], graph.get("layers", 1), graph.get("grid", 10))
+    except (KeyError, TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
 @app.post("/api/audit")
 def api_audit(payload: SystemTaskPayload):
     dossier = supervisor.process_task(payload)

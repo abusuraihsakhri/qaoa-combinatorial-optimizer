@@ -35,6 +35,15 @@ def create_app():
         def health():
             return {"status": "HEALTHY", "system": "qaoa-combinatorial-optimizer", "domain": "Quantum Computing", "version": "2.0.0-FRONTIER"}
 
+        @app.post("/api/maxcut")
+        def api_maxcut(graph: Dict[str, Any]):
+            from fastapi import HTTPException
+            from .maxcut import optimize_maxcut
+            try:
+                return optimize_maxcut(graph["vertices"], graph["edges"], graph.get("layers", 1), graph.get("grid", 10))
+            except (ValueError, KeyError, TypeError) as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
+
         @app.post("/api/audit")
         def api_audit(req: TaskRequest):
             payload = FrontierPayload(
