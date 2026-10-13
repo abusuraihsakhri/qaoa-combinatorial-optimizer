@@ -1,4 +1,4 @@
-name: Qaoa Combinatorial Optimizer CI/CD & Security Verification
+name: QAOA tests and security checks
 
 on:
   push:
@@ -7,34 +7,26 @@ on:
     branches: [ master, main ]
 
 jobs:
-  test-and-audit:
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
-
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    env:
+      AUDIT_SECRET_KEY: "test-only-ci-audit-secret-not-for-production-2026"
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v5
-      with:
-        python-version: ${{ matrix.python-version }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install fastapi uvicorn pydantic pytest
-
-    - name: Run Pytest Suite
-      run: |
-        pytest -v
-
-    - name: Security SAST & Zero-PHI Audit
-      run: |
-        python -c "
-        from agents.base import PHIGuard, AuditLogger
-        import pytest
-        assert AuditLogger.verify_integrity() is True
-        print('Security & Zero-PHI Audit Passed!')
-        "
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install project and test dependencies
+        run: python -m pip install -e ".[server,test]"
+      - name: Compile Python sources
+        run: python -m compileall -q agents qaoa_optimizer cli.py enrichment.py
+      - name: Run Python test suite
+        run: python -m pytest -q
+      - name: Test browser simulator
+        run: node --test tests/test_web_qaoa.mjs
+      - name: Check audit integrity
+        run: python -c "from agents.base import AuditLogger; assert AuditLogger.verify_integrity()"
