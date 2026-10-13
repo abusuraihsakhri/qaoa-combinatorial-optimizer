@@ -33,6 +33,12 @@ def main(argv=None):
     p_batch.add_argument("-i", "--input", required=True)
     p_batch.add_argument("-o", "--output", default="results.csv")
 
+    # Actual Max-Cut optimization (separate from the legacy parameter audit)
+    p_maxcut = subparsers.add_parser("maxcut", help="Optimize a small weighted Max-Cut graph")
+    p_maxcut.add_argument("--graph", required=True, help="JSON file containing vertices and edges")
+    p_maxcut.add_argument("--layers", type=int, default=1, choices=(1, 2, 3))
+    p_maxcut.add_argument("--grid", type=int, default=10, choices=range(4, 25))
+
     # Serve
     p_serve = subparsers.add_parser("serve", help="Launch FastAPI REST server")
     p_serve.add_argument("--host", default="127.0.0.1")
@@ -115,6 +121,18 @@ def main(argv=None):
             print(f"Error: Failed to write output file: {e}", file=sys.stderr)
             return 1
         print(f"Processed {len(out_rows)} records -> {args.output} (skipped {skipped})")
+        return 0
+
+    if args.command == "maxcut":
+        from qaoa_optimizer.maxcut import optimize_maxcut
+        try:
+            with open(args.graph, encoding="utf-8") as source:
+                graph = json.load(source)
+            result = optimize_maxcut(graph["vertices"], graph["edges"], layers=args.layers, grid=args.grid)
+        except (OSError, ValueError, TypeError, KeyError, json.JSONDecodeError) as error:
+            print(f"Error: Invalid Max-Cut graph: {error}", file=sys.stderr)
+            return 1
+        print(json.dumps(result, indent=2))
         return 0
 
     if args.command == "serve":
